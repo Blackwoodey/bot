@@ -3,13 +3,14 @@ from config import OPENAI_API_KEY, OPENAI_MODEL
 from openai import OpenAI
 
 # Удаляем возможные системные переменные прокси
-os.environ.pop("http_proxy", None)
-os.environ.pop("https_proxy", None)
-os.environ.pop("HTTP_PROXY", None)
-os.environ.pop("HTTPS_PROXY", None)
+for var in ["http_proxy", "https_proxy", "HTTP_PROXY", "HTTPS_PROXY"]:
+    os.environ.pop(var, None)
 
-# Инициализируем клиента OpenAI
-client = OpenAI(api_key=OPENAI_API_KEY)
+# Устанавливаем переменную окружения для OpenAI API
+os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
+
+# Инициализируем клиента OpenAI (без параметров — всё через переменные окружения)
+client = OpenAI()
 
 SYSTEM_PROMPT = (
     "Ты — Архетипический Интеллект, обученный на архетипической системе Таро Тота (А. Кроули), "
