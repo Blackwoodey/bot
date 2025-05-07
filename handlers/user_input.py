@@ -3,7 +3,7 @@ from aiogram.filters import Command
 from datetime import datetime
 from services.calculator import calculate_archetypes
 from services.textbase import get_text
-from services.gpt_engine import generate_prophetic_text
+from services.gpt_core import generate_prophetic_text
 from services.logger import save_to_history
 
 router = Router()
