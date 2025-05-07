@@ -7,7 +7,10 @@ for var in ["http_proxy", "https_proxy", "HTTP_PROXY", "HTTPS_PROXY"]:
     os.environ.pop(var, None)
 
 # Устанавливаем переменную окружения для OpenAI API
-os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
+if OPENAI_API_KEY:
+    os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
+else:
+    raise RuntimeError("OPENAI_API_KEY is not set")
 
 # Инициализируем клиента OpenAI (без параметров — всё через переменные окружения)
 client = OpenAI()
