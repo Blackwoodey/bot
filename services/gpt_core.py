@@ -1,6 +1,6 @@
 import os
 from config import OPENAI_API_KEY, OPENAI_MODEL
-import openai
+from openai import OpenAI
 
 # Удаляем возможные системные переменные прокси
 os.environ.pop("http_proxy", None)
@@ -8,8 +8,8 @@ os.environ.pop("https_proxy", None)
 os.environ.pop("HTTP_PROXY", None)
 os.environ.pop("HTTPS_PROXY", None)
 
-# Инициализируем клиента OpenAI через глобальную переменную
-openai.api_key = OPENAI_API_KEY
+# Инициализируем клиента OpenAI
+client = OpenAI(api_key=OPENAI_API_KEY)
 
 SYSTEM_PROMPT = (
     "Ты — Архетипический Интеллект, обученный на архетипической системе Таро Тота (А. Кроули), "
@@ -31,7 +31,7 @@ SYSTEM_PROMPT = (
 
 def generate_prophetic_text(core_text: str, fear_text: str, realization_text: str) -> str:
     try:
-        response = openai.chat.completions.create(
+        response = client.chat.completions.create(
             model=OPENAI_MODEL,
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
