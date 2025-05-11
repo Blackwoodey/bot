@@ -1,6 +1,6 @@
 from aiogram import Router, types, F
-from aiogram.filters import Command
 from datetime import datetime
+from aiogram.filters import Command
 from services.calculator import calculate_archetypes
 from services.textbase import get_text
 from services.gpt_core import generate_prophetic_text
@@ -29,6 +29,13 @@ async def date_handler(message: types.Message):
         core_text = get_text("core", core)
         fear_text = get_text("fear", fear)
         realization_text = get_text("realization", realization)
+
+        # 🧾 Логгирование входа в GPT
+        print("\n=== ВХОД В GPT ===")
+        print(f"CORE:\n{core_text}\n")
+        print(f"FEAR:\n{fear_text}\n")
+        print(f"REALIZATION:\n{realization_text}\n")
+        print("==================\n")
 
         result = generate_prophetic_text(core_text, fear_text, realization_text)
 

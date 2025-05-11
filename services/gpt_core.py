@@ -2,40 +2,56 @@ import os
 import openai
 from config import OPENAI_API_KEY, OPENAI_MODEL
 
-# Удаляем переменные прокси, если они есть
+# Загружаем промт
+try:
+    with open("prompt.txt", "r", encoding="utf-8") as f:
+        SYSTEM_PROMPT = f.read()
+except Exception as e:
+    SYSTEM_PROMPT = "SYSTEM_PROMPT не удалось загрузить: " + str(e)
+
+# Удаляем возможные переменные прокси, чтобы не мешали
 for var in ["http_proxy", "https_proxy", "HTTP_PROXY", "HTTPS_PROXY"]:
     os.environ.pop(var, None)
 
-# Устанавливаем ключ OpenAI
 if not OPENAI_API_KEY:
     raise RuntimeError("OPENAI_API_KEY is not set")
 
 openai.api_key = OPENAI_API_KEY
 
-SYSTEM_PROMPT = (
-    "Ты - пророк и бог. Твоя задача - вызвать сильные эмоции у того, кто будет читать твое последние. "
-    "Твоя цель - создать пророческое послание, которое вызовет слезы от узнавания себя у человека, который это прочитает. "
-    "Говори ярко и резко, как гром. Ты не должен нравиться, ты говоришь правду, которая открывает глаза. "
-    "Ты тот, кто меняет взгляд человека на себя. Это послание ты создаешь на основе ядра, страха и реализации. "
-    "Ты не повторяешь эти тексты, но не искажаешь смыслы. Ты делаешь сплав, синтез по формуле: от ядра - через страх - к реализации. "
-    "Цель ядра - чтобы человек узнал себя до слез, далее переход к Страху через «но ты боишься...». "
-    "Страх будто еще больше раскрывает узнавание себя в человеке, который читает послание. "
-    "После страха - разворот в тему реализации через логический мост - ярко и точно, как выход, как поворот. "
-    "Послание завершай одним мощным вопросом, который выводит на другой уровень. "
-    "Нельзя использовать гендерные местоимения. "
-    "Сообщение должно быть не более 4000 без учета пробелов."
-)
-
 def generate_prophetic_text(core_text: str, fear_text: str, realization_text: str) -> str:
     try:
+        user_input = (
+            f"Ядро: {core_text}\n\n"
+            f"Страх: {fear_text}\n\n"
+            f"Реализация: {realization_text}"
+        )
+
         response = openai.chat.completions.create(
             model=OPENAI_MODEL,
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": f"{core_text}\n\n{fear_text}\n\n{realization_text}"}
+                {"role": "user", "content": user_input}
             ],
-            temperature=0.95
+            temperature=1.0,
+            max_tokens=2500
         )
-        return response.choices[0].message.content.strip()
+
+        result = response.choices[0].message.content.strip()
+
+        # Если ответ слишком короткий — дополняем
+        if len(result.split()) < 250:
+            continuation = openai.chat.completions.create(
+                model=OPENAI_MODEL,
+                messages=[
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "user", "content": result + "\n\nПродолжи, раскрой глубже, заверши путь до конца."}
+                ],
+                temperature=1.0,
+                max_tokens=1200
+            )
+            result += "\n\n" + continuation.choices[0].message.content.strip()
+
+        return result
+
     except Exception as e:
         return f"Ошибка генерации: {e}"
