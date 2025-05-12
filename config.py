@@ -6,7 +6,7 @@ load_dotenv()
 
 # OpenAI
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-OPENAI_MODEL = "Fine-tuned model: ft:gpt-4o-mini-2024-07-18:ksenia:BW7rAyWT"
+OPENAI_MODEL = "ft:gpt-4o-mini-2024-07-18:ksenia::BW7rAyWI"
 
 # Telegram Bot
 BOT_TOKEN = os.getenv("BOT_TOKEN")
