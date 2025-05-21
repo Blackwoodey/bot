@@ -41,7 +41,7 @@ def generate_prophetic_text(core_text: str, fear_text: str, realization_text: st
             f"Реализация: {realization_text}"
         )
 
-        response = openai.chat.completions.create(
+        response = openai.ChatCompletion.create(
             model=OPENAI_MODEL,
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
@@ -55,7 +55,7 @@ def generate_prophetic_text(core_text: str, fear_text: str, realization_text: st
 
         # Если ответ слишком короткий — дополняем
         if len(result.split()) < 250:
-            continuation = openai.chat.completions.create(
+            continuation = openai.ChatCompletion.create(
                 model=OPENAI_MODEL,
                 messages=[
                     {"role": "system", "content": SYSTEM_PROMPT},
