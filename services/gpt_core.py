@@ -23,8 +23,8 @@ def set_temperature(new_temp: float):
     with open(TEMPERATURE_FILE, "w", encoding="utf-8") as f:
         f.write(str(new_temp))
 
-# Новый клиент OpenAI
-client = openai(api_key=OPENAI_API_KEY)
+# Установка API-ключа
+openai.api_key = OPENAI_API_KEY
 
 def generate_prophetic_text(core_text: str, fear_text: str, realization_text: str) -> str:
     try:
@@ -36,7 +36,7 @@ def generate_prophetic_text(core_text: str, fear_text: str, realization_text: st
         )
 
         # Первый ответ
-        response = client.chat.completions.create(
+        response = openai.ChatCompletion.create(
             model=OPENAI_MODEL,
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
@@ -50,7 +50,7 @@ def generate_prophetic_text(core_text: str, fear_text: str, realization_text: st
 
         # Дополнение, если текст слишком короткий
         if len(result.split()) < 250:
-            continuation = client.chat.completions.create(
+            continuation = openai.ChatCompletion.create(
                 model=OPENAI_MODEL,
                 messages=[
                     {"role": "system", "content": SYSTEM_PROMPT},
@@ -60,6 +60,12 @@ def generate_prophetic_text(core_text: str, fear_text: str, realization_text: st
                 max_tokens=1200
             )
             result += "\n\n" + continuation.choices[0].message.content.strip()
+
+        return result
+
+    except Exception as e:
+        return f"Ошибка генерации: {e}"
+
 
         return result
 
