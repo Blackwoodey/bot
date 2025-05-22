@@ -24,7 +24,7 @@ def set_temperature(new_temp: float):
         f.write(str(new_temp))
 
 # Новый клиент OpenAI
-client = OpenAI(api_key=OPENAI_API_KEY)
+client = openai(api_key=OPENAI_API_KEY)
 
 def generate_prophetic_text(core_text: str, fear_text: str, realization_text: str) -> str:
     try:
