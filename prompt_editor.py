@@ -1,4 +1,4 @@
-from aiogram import Router, F, types
+from aiogram import Router, F
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
@@ -7,11 +7,12 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 import os
 
-# Список Telegram ID админов
+# ✅ Список Telegram ID админов
 ADMINS = {689955387, 791851827}
 
 router = Router()
 
+# ✅ Пути к файлам промтов
 PROMPT_PATHS = {
     "prompt.txt": "prompt.txt",
     "stage2.txt": "prompts/stage2.txt",
@@ -20,10 +21,12 @@ PROMPT_PATHS = {
     "stage4.txt": "prompts/stage4.txt"
 }
 
+# ✅ Состояния FSM
 class PromptEdit(StatesGroup):
     choosing = State()
     editing = State()
 
+# ✅ Команда /edit_prompt
 @router.message(Command("edit_prompt"))
 async def edit_prompt_command(msg: Message, state: FSMContext):
     if msg.from_user.id not in ADMINS:
@@ -35,6 +38,7 @@ async def edit_prompt_command(msg: Message, state: FSMContext):
     await msg.answer("Выбери файл промта для редактирования:", reply_markup=kb.as_markup())
     await state.set_state(PromptEdit.choosing)
 
+# ✅ Обработка нажатия на кнопку выбора файла
 @router.callback_query(PromptEdit.choosing)
 async def show_current_prompt(callback: CallbackQuery, state: FSMContext):
     file_key = callback.data
@@ -53,6 +57,7 @@ async def show_current_prompt(callback: CallbackQuery, state: FSMContext):
     await state.set_state(PromptEdit.editing)
     await callback.answer()
 
+# ✅ Сохранение нового текста промта
 @router.message(PromptEdit.editing, F.text)
 async def save_new_prompt(msg: Message, state: FSMContext):
     data = await state.get_data()
@@ -64,3 +69,8 @@ async def save_new_prompt(msg: Message, state: FSMContext):
     except Exception as e:
         await msg.answer(f"❌ Ошибка при сохранении: {e}")
     await state.clear()
+
+# ✅ Обработка кнопки из меню "📝 Изменить промт"
+@router.message(F.text == "📝 Изменить промт")
+async def prompt_menu_button(msg: Message, state: FSMContext):
+    await edit_prompt_command(msg, state)
