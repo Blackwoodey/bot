@@ -42,7 +42,8 @@ async def temperature_change_request(message: Message):
     with open(".temperature_state", "w") as f:
         f.write(str(message.from_user.id))
 
-@router.message()
+# ✅ Обрабатываем только числа (отсекаем команды и кнопки)
+@router.message(F.text.regexp(r"^\d+(\.\d+)?$"))
 async def catch_temperature(message: Message):
     user_id = str(message.from_user.id)
 
