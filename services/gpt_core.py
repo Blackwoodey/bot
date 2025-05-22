@@ -1,5 +1,5 @@
 import os
-from openai import OpenAI
+import openai
 from config import OPENAI_API_KEY, OPENAI_MODEL
 
 # Загружаем промт
