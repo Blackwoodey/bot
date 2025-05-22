@@ -1,14 +1,15 @@
-from openai import OpenAI
+import openai
 from config import OPENAI_API_KEY
 
-client = OpenAI(api_key=OPENAI_API_KEY)
+# Устанавливаем API-ключ
+openai.api_key = OPENAI_API_KEY
 
 def ask_initiation_question(arch_core: str, arch_fear: str, arch_realization: str) -> str:
     try:
         with open("prompts/stage2.txt", "r", encoding="utf-8") as f:
             system_prompt = f.read()
 
-        response = client.chat.completions.create(
+        response = openai.ChatCompletion.create(
             model="gpt-4o",
             messages=[
                 {"role": "system", "content": system_prompt},
