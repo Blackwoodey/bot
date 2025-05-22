@@ -7,15 +7,11 @@ from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton
 from config import BOT_TOKEN
 from handlers import user_input
 from services.gpt_core import get_temperature, set_temperature
-
-# ✅ Импортируем роутер из нового модуля
 from prompt_editor import router as prompt_editor_router
 
 router = Router()
-
 ADMINS = {"791851827", "689955387"}
 
-# Главное меню
 main_keyboard = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text="📝 Изменить промт")],
@@ -28,7 +24,6 @@ main_keyboard = ReplyKeyboardMarkup(
 async def show_menu(message: Message):
     await message.answer("Добро пожаловать! Выберите действие:", reply_markup=main_keyboard)
 
-# Кнопка "Изменить температуру"
 @router.message(F.text == "🌡️ Изменить температуру")
 async def temperature_change_request(message: Message):
     if str(message.from_user.id) not in ADMINS:
@@ -47,12 +42,10 @@ async def temperature_change_request(message: Message):
     with open(".temperature_state", "w") as f:
         f.write(str(message.from_user.id))
 
-# Обработка ввода новой температуры
 @router.message()
 async def catch_temperature(message: Message):
     user_id = str(message.from_user.id)
 
-    # Температура
     if os.path.exists(".temperature_state"):
         with open(".temperature_state", "r") as f:
             waiting_id = f.read().strip()
@@ -69,13 +62,17 @@ async def catch_temperature(message: Message):
             os.remove(".temperature_state")
             return
 
-# Запуск бота
+# 🚀 Запуск бота
 async def main():
     bot = Bot(token=BOT_TOKEN)
     dp = Dispatcher()
     dp.include_router(user_input.router)
-    dp.include_router(prompt_editor_router)  # подключаем редактор промтов
+    dp.include_router(prompt_editor_router)
     dp.include_router(router)
+
+    # 💥 Удаляем старый webhook перед polling
+    await bot.delete_webhook(drop_pending_updates=True)
+
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
