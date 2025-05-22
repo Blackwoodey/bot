@@ -1,17 +1,16 @@
-from openai import OpenAI
+import openai
 from config import OPENAI_API_KEY
 
-client = OpenAI(api_key=OPENAI_API_KEY)
+openai.api_key = OPENAI_API_KEY
 
 def offer_calculation(theme: str, user_message: str) -> str:
     try:
         with open("prompts/stage4.txt", "r", encoding="utf-8") as f:
             system_prompt = f.read()
 
-        # Вводим оба параметра в один запрос
         input_text = f"theme: {theme}\n\nuser_message: {user_message}"
 
-        response = client.chat.completions.create(
+        response = openai.ChatCompletion.create(
             model="gpt-4o",
             messages=[
                 {"role": "system", "content": system_prompt},
