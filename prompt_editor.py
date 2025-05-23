@@ -12,41 +12,41 @@ ADMINS = {689955387, 791851827}
 
 router = Router()
 
-# ✅ Пути к файлам промтов с понятными названиями
+# ✅ Краткие ключи → (название кнопки, путь к файлу)
 PROMPT_PATHS = {
-    "🌐 Общий (начальный)": "prompt.txt",
-    "🌀 Этап 2 — Вопрос": "prompts/stage2.txt",
-    "🧭 Этап 3 — Архетип боли": "prompts/stage3.txt",
-    "🔁 Этап 3b — Направление": "prompts/stage3b.txt",
-    "💬 Этап 4 — Вовлечение и предложение": "prompts/stage4.txt"
+    "core": ("Основной промт (gpt)", "prompt.txt"),
+    "stage2": ("Этап 2: вопрос", "prompts/stage2.txt"),
+    "stage3": ("Этап 3: распознавание", "prompts/stage3.txt"),
+    "stage3b": ("Этап 3б: предложение пути", "prompts/stage3b.txt"),
+    "stage4": ("Этап 4: вовлечение", "prompts/stage4.txt")
 }
 
+# ✅ Состояния FSM
 class PromptEdit(StatesGroup):
     choosing = State()
     editing = State()
 
+# ✅ Команда /edit_prompt
 @router.message(Command("edit_prompt"))
 async def edit_prompt_command(msg: Message, state: FSMContext):
     if msg.from_user.id not in ADMINS:
         return await msg.answer("⛔ Только админ может редактировать промты.")
 
     kb = InlineKeyboardBuilder()
-    for title in PROMPT_PATHS:
-        kb.button(text=title, callback_data=title)
+    for key, (label, _) in PROMPT_PATHS.items():
+        kb.button(text=label, callback_data=key)
+
     await msg.answer("Выбери файл промта для редактирования:", reply_markup=kb.as_markup())
     await state.set_state(PromptEdit.choosing)
 
-# 🔁 Обработка кнопки из меню "📝 Изменить промт"
-@router.message(F.text.contains("Изменить промт"))
-async def prompt_menu_button(msg: Message, state: FSMContext):
-    await edit_prompt_command(msg, state)
-
+# ✅ Обработка нажатия на кнопку выбора файла
 @router.callback_query(PromptEdit.choosing)
 async def show_current_prompt(callback: CallbackQuery, state: FSMContext):
     file_key = callback.data
-    file_path = PROMPT_PATHS.get(file_key)
-    if not file_path:
-        return await callback.message.answer("❌ Не удалось найти путь к выбранному промту.")
+    if file_key not in PROMPT_PATHS:
+        return await callback.message.answer("❌ Неизвестный файл.")
+
+    _, file_path = PROMPT_PATHS[file_key]
 
     try:
         with open(file_path, "r", encoding="utf-8") as f:
@@ -62,6 +62,7 @@ async def show_current_prompt(callback: CallbackQuery, state: FSMContext):
     await state.set_state(PromptEdit.editing)
     await callback.answer()
 
+# ✅ Сохранение нового текста промта
 @router.message(PromptEdit.editing, F.text)
 async def save_new_prompt(msg: Message, state: FSMContext):
     data = await state.get_data()
@@ -73,3 +74,8 @@ async def save_new_prompt(msg: Message, state: FSMContext):
     except Exception as e:
         await msg.answer(f"❌ Ошибка при сохранении: {e}")
     await state.clear()
+
+# ✅ Обработка кнопки из меню "📝 Изменить промт"
+@router.message(F.text == "📝 Изменить промт")
+async def prompt_menu_button(msg: Message, state: FSMContext):
+    await edit_prompt_command(msg, state)
