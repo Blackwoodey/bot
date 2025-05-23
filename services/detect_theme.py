@@ -1,19 +1,20 @@
+import re
+
 def detect_theme(text: str) -> str:
-    text = text.lower().strip()
+    text = text.lower()
 
-    money_keywords = [
-        "деньги", "денег", "деньгам", "финансы", "оплата", "оплатить", "платить",
-        "платёж", "цены", "стоимость", "доход", "заработок", "бедность", "долги",
-        "страх выживания", "денежный поток"
+    money_patterns = [
+        r"\bденьг", r"\bфинанс", r"\bоплат", r"\bплат", r"\bцена", r"\bстоимост",
+        r"\bдоход", r"\bзаработ", r"\bбедн", r"\bдолг", r"выживан", r"поток"
     ]
 
-    crisis_keywords = [
-        "кризис", "застой", "цикл", "повтор", "замкнутый круг", "ничего не двигается",
-        "слом", "поворотный момент", "перелом", "тупик", "непонятно", "застрял"
+    crisis_patterns = [
+        r"\bкризис", r"\bзастой", r"\bперелом", r"\bцикл", r"\bповтор",
+        r"\bтупик", r"\bзастрял", r"замкнут", r"ничего не двигается", r"слом"
     ]
 
-    if any(kw in text for kw in money_keywords):
+    if any(re.search(pat, text) for pat in money_patterns):
         return "деньги"
-    elif any(kw in text for kw in crisis_keywords):
+    elif any(re.search(pat, text) for pat in crisis_patterns):
         return "кризис"
     return "общая"
