@@ -9,10 +9,12 @@ from handlers.stage2_question import ask_initiation_question
 from handlers.stage3_recognition import recognize_arch_state
 from handlers.stage3_direction import suggest_path_from_arch
 from handlers.stage4_offer import offer_calculation
-from services.detect_theme import detect_theme  # ⬅️ Добавлено
+from services.detect_theme import detect_theme
+import asyncio
 
 router = Router()
 user_context = {}
+timeout_tasks = {}
 
 @router.message(Command("start"))
 async def start_handler(message: types.Message):
@@ -35,12 +37,6 @@ async def date_handler(message: types.Message):
         fear_text = get_text("fear", fear)
         realization_text = get_text("realization", realization)
 
-        print("\n=== ВХОД В GPT ===")
-        print(f"CORE:\n{core_text}\n")
-        print(f"FEAR:\n{fear_text}\n")
-        print(f"REALIZATION:\n{realization_text}\n")
-        print("==================\n")
-
         result = generate_prophetic_text(core_text, fear_text, realization_text)
         save_to_history(core_text, fear_text, realization_text, result)
 
@@ -58,6 +54,21 @@ async def date_handler(message: types.Message):
             "last_user_message": ""
         }
 
+        # Авто-триггер для этапа 3 через 180 сек
+        async def timeout_stage3():
+            await asyncio.sleep(180)
+            context = user_context.get(message.from_user.id)
+            if context and context["state"] == "awaiting_stage3":
+                fallback = "Ты готов услышать — где выход?"
+                arch_result = recognize_arch_state(fallback)
+                await message.answer(arch_result)
+                direction = suggest_path_from_arch("Повешенный")
+                await message.answer(direction)
+                context["state"] = "awaiting_stage4"
+                user_context[message.from_user.id] = context
+
+        timeout_tasks[message.from_user.id] = asyncio.create_task(timeout_stage3())
+
     except ValueError:
         await message.answer("Неверный формат даты. Используй ДД.ММ.ГГГГ.")
     except Exception as e:
@@ -69,6 +80,11 @@ async def handle_stages(message: types.Message):
     context = user_context.get(user_id, {})
 
     if context.get("state") == "awaiting_stage3":
+        # Отменяем авто-триггер
+        task = timeout_tasks.pop(user_id, None)
+        if task:
+            task.cancel()
+
         arch_result = recognize_arch_state(message.text)
         await message.answer(arch_result)
 
