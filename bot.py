@@ -19,10 +19,12 @@ ADMINS = {"791851827", "689955387"}
 # ✅ Главное меню
 main_keyboard = ReplyKeyboardMarkup(
     keyboard=[
-        [KeyboardButton(text="📝 Изменить промт")],
+        [KeyboardButton(text="📈 Изменить промт")],
         [KeyboardButton(text="🌡️ Изменить температуру")]
     ],
-    resize_keyboard=True
+    resize_keyboard=True,
+    one_time_keyboard=False,
+    input_field_placeholder="Выберите действие:"
 )
 
 # ✅ Команда /menu
@@ -43,13 +45,13 @@ async def temperature_change_request(message: Message):
 
     await message.answer(
         f"🌡️ Текущая температура: {current_temp}\n\n✍️ Введите новое значение от 0.0 до 2.0:",
-        reply_markup=None
+        reply_markup=ReplyKeyboardMarkup(keyboard=[], resize_keyboard=True)
     )
 
     with open(".temperature_state", "w") as f:
         f.write(str(message.from_user.id))
 
-# ✅ Обрабатываем только числа (отсекаем команды и кнопки)
+# ✅ Обрабатываем только числа ( отсекаем команды и кнопки)
 @router.message(F.text.regexp(r"^\d+(\.\d+)?$"))
 async def catch_temperature(message: Message):
     user_id = str(message.from_user.id)
