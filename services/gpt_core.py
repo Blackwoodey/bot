@@ -43,7 +43,7 @@ def generate_prophetic_text(core_text: str, fear_text: str, realization_text: st
                 {"role": "user", "content": user_input}
             ],
             temperature=temperature,
-            max_tokens=2500
+            max_tokens=1000
         )
 
         result = response.choices[0].message.content.strip()
