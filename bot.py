@@ -1,17 +1,22 @@
 from dotenv import load_dotenv
 load_dotenv()
+
 import asyncio
 import os
 from aiogram import Bot, Dispatcher, F, Router
 from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton
+
 from config import BOT_TOKEN
 from handlers import user_input
 from services.gpt_core import get_temperature, set_temperature
 from prompt_editor import router as prompt_editor_router
 
 router = Router()
+
+# ✅ Список админов
 ADMINS = {"791851827", "689955387"}
 
+# ✅ Главное меню
 main_keyboard = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text="📝 Изменить промт")],
@@ -20,10 +25,12 @@ main_keyboard = ReplyKeyboardMarkup(
     resize_keyboard=True
 )
 
+# ✅ Команда /menu
 @router.message(F.text == "/menu")
 async def show_menu(message: Message):
     await message.answer("Добро пожаловать! Выберите действие:", reply_markup=main_keyboard)
 
+# ✅ Кнопка "Изменить температуру"
 @router.message(F.text == "🌡️ Изменить температуру")
 async def temperature_change_request(message: Message):
     if str(message.from_user.id) not in ADMINS:
@@ -67,13 +74,13 @@ async def catch_temperature(message: Message):
 async def main():
     bot = Bot(token=BOT_TOKEN)
     dp = Dispatcher()
-    dp.include_router(user_input.router)
+
+    # 🔁 Порядок важен: сначала те, кто обрабатывает команды и кнопки
     dp.include_router(prompt_editor_router)
-    dp.include_router(router)
+    dp.include_router(router)  # меню и температура
+    dp.include_router(user_input.router)  # основной диалог — последним
 
-    # 💥 Удаляем старый webhook перед polling
     await bot.delete_webhook(drop_pending_updates=True)
-
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
