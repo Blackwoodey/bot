@@ -35,7 +35,6 @@ def generate_prophetic_text(core_text: str, fear_text: str, realization_text: st
             f"Реализация: {realization_text}"
         )
 
-        # Первый ответ
         response = openai.ChatCompletion.create(
             model=OPENAI_MODEL,
             messages=[
@@ -43,30 +42,10 @@ def generate_prophetic_text(core_text: str, fear_text: str, realization_text: st
                 {"role": "user", "content": user_input}
             ],
             temperature=temperature,
-            max_tokens=1000
+            max_tokens=1000  # ограничим одним ответом
         )
 
         result = response.choices[0].message.content.strip()
-
-        # Дополнение, если текст слишком короткий
-        if len(result.split()) < 250:
-            continuation = openai.ChatCompletion.create(
-                model=OPENAI_MODEL,
-                messages=[
-                    {"role": "system", "content": SYSTEM_PROMPT},
-                    {"role": "user", "content": result + "\n\nПродолжи, раскрой глубже, заверши путь до конца."}
-                ],
-                temperature=temperature,
-                max_tokens=1200
-            )
-            result += "\n\n" + continuation.choices[0].message.content.strip()
-
-        return result
-
-    except Exception as e:
-        return f"Ошибка генерации: {e}"
-
-
         return result
 
     except Exception as e:
