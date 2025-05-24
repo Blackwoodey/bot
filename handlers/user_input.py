@@ -6,9 +6,9 @@ from services.textbase import get_text
 from services.gpt_core import generate_prophetic_text
 from services.logger import save_to_history
 from services.detect_theme import detect_theme
+from bot import user_context  # ✅ используем общий user_context
 
 router = Router()
-user_context = {}
 
 @router.message(Command("start"))
 async def start_handler(message: types.Message):
@@ -32,24 +32,24 @@ async def date_handler(message: types.Message):
             await message.answer("Пожалуйста, укажи реальный год рождения от 1900 до текущего 🗓️")
             return
 
-        # 2) Считаем архетипы (для истории и входных данных finetune)
+        # 2) Считаем архетипы
         core, fear, realization = calculate_archetypes(message.text)
         core_text = get_text("core", core)
         fear_text = get_text("fear", fear)
         realization_text = get_text("realization", realization)
 
-        # 3) Генерируем единый «пророческий» текст с вопросом
+        # 3) Генерируем пророческий текст
         result = generate_prophetic_text(core_text, fear_text, realization_text)
 
         # 4) Сохраняем в историю
         save_to_history(core_text, fear_text, realization_text, result)
 
-        # 5) Шлём пользователю (по чанкам, если длинный)
+        # 5) Отправляем по частям (если длинный)
         MAX_LEN = 4096
         for i in range(0, len(result), MAX_LEN):
             await message.answer(result[i : i + MAX_LEN])
 
-        # 6) Переводим пользователя в состояние ожидания ответа на вопрос
+        # 6) Переводим пользователя в стадию 3 (ожидание отклика)
         user_context[user_id] = {
             "state": "awaiting_stage3",
             "birth_date": birth_date,
